@@ -50,11 +50,12 @@ fn main() -> io::Result<()> {
     };
 
     if let Ok(_) = visit_dirs(&current_dir, &mut callback) {
+        let leading_path = current_dir.to_str().unwrap();
         // Reverse sort so that highest (most recent) mtimes are first
         entries.sort_by_key(|e| Reverse(e.mtime));
 
         for e in &entries[..number_of_entries_to_print] {
-            println!("{}", e.path);
+            println!("{}", &e.path[leading_path.len() + 1..]);
         }
 
         Ok(())
