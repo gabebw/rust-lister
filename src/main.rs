@@ -36,7 +36,6 @@ fn main() -> io::Result<()> {
 
     let number_of_entries_to_print: usize = args[1].parse().unwrap();
     let current_dir = env::current_dir()?;
-    let parent = current_dir.parent().unwrap();
     let mut entries: Vec<Entry> = vec!();
 
     let mut callback = |entry: &DirEntry| {
@@ -48,7 +47,7 @@ fn main() -> io::Result<()> {
         entries.push(entry);
     };
 
-    if let Ok(_) = visit_dirs(&parent, &mut callback) {
+    if let Ok(_) = visit_dirs(&current_dir, &mut callback) {
         // Reverse sort so that highest (most recent) mtimes are first
         entries.sort_by_key(|e| Reverse(e.mtime));
 
