@@ -1,37 +1,23 @@
 use std::cmp::Reverse;
 use std::env;
-use std::fs::{self, DirEntry};
 use std::io::{self, ErrorKind};
-use std::path::{Path};
 use std::time::{SystemTime};
-
-// walk a directory only visiting files
-fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&DirEntry)) -> io::Result<()> {
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_dir() {
-                visit_dirs(&path, cb)?;
-            } else {
-                cb(&entry);
-            }
-        }
-    }
-    Ok(())
-}
+use walkdir::WalkDir;
 
 struct Entry {
     path: String,
     mtime: u64,
 }
 
-fn build_entry(entry: &DirEntry) -> Entry {
-    let path = entry.path();
-    let metadata = fs::metadata(&path).unwrap();
-    let mtime = metadata.modified().unwrap().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
-    // I don't understand lifetimes so let's make the map own the `path` by cloning it
-    Entry { path: path.as_path().to_str().unwrap().to_string(), mtime: mtime }
+fn build_entry(direntry: &walkdir::DirEntry) -> io::Result<Entry> {
+    let path = direntry.path();
+    let metadata = direntry.metadata()?;
+    if let Ok(duration) = metadata.modified()?.duration_since(SystemTime::UNIX_EPOCH) {
+        // I don't understand lifetimes so let's make the map own the `path` by cloning it
+        Ok(Entry { path: path.to_str().unwrap().to_string(), mtime: duration.as_secs() })
+    } else {
+        Err(io::Error::new(ErrorKind::Other, "Could not convert duration"))
+    }
 }
 
 fn main() -> io::Result<()> {
@@ -45,22 +31,25 @@ fn main() -> io::Result<()> {
     let current_dir = env::current_dir()?;
     let mut entries: Vec<Entry> = vec!();
 
-    let mut callback = |entry: &DirEntry| {
-        entries.push(build_entry(entry));
-    };
-
-    if let Ok(_) = visit_dirs(&current_dir, &mut callback) {
-        let leading_path = current_dir.to_str().unwrap();
-        // Reverse sort so that highest (most recent) mtimes are first
-        entries.sort_by_key(|e| Reverse(e.mtime));
-
-        for e in &entries[..number_of_entries_to_print] {
-            println!("{}", &e.path[leading_path.len() + 1..]);
+    for direntry in WalkDir::new(&current_dir) {
+        if let Ok(direntry) = direntry {
+            if let Ok(entry) = build_entry(&direntry) {
+                entries.push(entry);
+            } else {
+                eprintln!("Failed building entry");
+            }
+        } else {
+            eprintln!("Failed finding entry");
         }
-
-        Ok(())
-    } else {
-        eprintln!("Something went wrong when searching for files");
-        Err(io::Error::new(ErrorKind::Other, "oh no!"))
     }
+
+    let leading_path = current_dir.to_str().unwrap();
+    // Reverse sort so that highest (most recent) mtimes are first
+    entries.sort_by_key(|e| Reverse(e.mtime));
+
+    for e in &entries[..number_of_entries_to_print] {
+        println!("{}", &e.path[leading_path.len() + 1..]);
+    }
+
+    Ok(())
 }
