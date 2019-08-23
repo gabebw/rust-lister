@@ -46,7 +46,7 @@ fn main() -> io::Result<()> {
         entries.sort_by_key(|e| Reverse(e.mtime));
 
         for e in entries {
-            println!("{:<10} @ {}", e.path, e.mtime);
+            println!("{:<120} @ {}", e.path, e.mtime);
         }
 
         Ok(())
