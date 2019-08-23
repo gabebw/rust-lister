@@ -19,11 +19,11 @@ intentionally does not check gitignore-type files.
 
 Show the most recent 10 files:
 
-  lister
+    lister
 
-Show the most recent N files:
+Show the most recent NUM files:
 
-  lister N
+    lister NUM
 
 Sample output in the rust-lister directory:
 
