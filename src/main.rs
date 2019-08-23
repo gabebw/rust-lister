@@ -1,4 +1,4 @@
-use std::cmp::Reverse;
+use std::cmp::{self, Reverse};
 use std::env;
 use std::io::{self, ErrorKind};
 use std::time::{SystemTime};
@@ -29,7 +29,7 @@ fn is_hidden(entry: &DirEntry) -> bool {
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let number_of_entries_to_print: usize = if args.len() < 2 {
+    let maximum_number_of_entries_to_print: usize = if args.len() < 2 {
         10
     } else {
         args[1].parse().unwrap()
@@ -54,6 +54,7 @@ fn main() -> io::Result<()> {
     let leading_path = current_dir.to_str().unwrap();
     // Reverse sort so that highest (most recent) mtimes are first
     entries.sort_by_key(|e| Reverse(e.mtime));
+    let number_of_entries_to_print = cmp::min(maximum_number_of_entries_to_print, entries.len());
 
     for e in &entries[..number_of_entries_to_print] {
         println!("{}", &e.path[leading_path.len() + 1..]);
