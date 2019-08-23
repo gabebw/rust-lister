@@ -1,9 +1,9 @@
 use std::cmp::Reverse;
-use std::collections::HashMap;
 use std::env;
 use std::fs::{self, DirEntry};
-use std::io::{self, Error, ErrorKind};
-use std::path::{Path, PathBuf};
+use std::io::{self, ErrorKind};
+use std::path::{Path};
+use std::process;
 use std::time::{SystemTime};
 
 // walk a directory only visiting files
@@ -28,6 +28,13 @@ struct Entry {
 }
 
 fn main() -> io::Result<()> {
+    let args: Vec<String> = env::args().collect();
+    if args.len() < 2 {
+        eprintln!("Usage: {} [number]", args[0]);
+        process::exit(1);
+    }
+
+    let number_of_entries_to_print: usize = args[1].parse().unwrap();
     let current_dir = env::current_dir()?;
     let parent = current_dir.parent().unwrap();
     let mut entries: Vec<Entry> = vec!();
@@ -45,8 +52,8 @@ fn main() -> io::Result<()> {
         // Reverse sort so that highest (most recent) mtimes are first
         entries.sort_by_key(|e| Reverse(e.mtime));
 
-        for e in entries {
-            println!("{:<120} @ {}", e.path, e.mtime);
+        for e in &entries[..number_of_entries_to_print] {
+            println!("{}", e.path);
         }
 
         Ok(())
