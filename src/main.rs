@@ -2,7 +2,7 @@ use std::cmp::Reverse;
 use std::env;
 use std::io::{self, ErrorKind};
 use std::time::{SystemTime};
-use walkdir::WalkDir;
+use walkdir::{DirEntry, WalkDir};
 
 struct Entry {
     path: String,
@@ -20,6 +20,13 @@ fn build_entry(direntry: &walkdir::DirEntry) -> io::Result<Entry> {
     }
 }
 
+fn is_hidden(entry: &DirEntry) -> bool {
+    entry.file_name()
+        .to_str()
+        .map(|s| s.starts_with("."))
+        .unwrap_or(false)
+}
+
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let number_of_entries_to_print: usize = if args.len() < 2 {
@@ -31,7 +38,8 @@ fn main() -> io::Result<()> {
     let current_dir = env::current_dir()?;
     let mut entries: Vec<Entry> = vec!();
 
-    for direntry in WalkDir::new(&current_dir) {
+    let walker = WalkDir::new(&current_dir).follow_links(true);
+    for direntry in walker.into_iter().filter_entry(|e| !is_hidden(e)) {
         if let Ok(direntry) = direntry {
             if let Ok(entry) = build_entry(&direntry) {
                 entries.push(entry);
