@@ -1,3 +1,4 @@
+use std::cmp::Reverse;
 use std::collections::HashMap;
 use std::env;
 use std::fs::{self, DirEntry};
@@ -41,7 +42,8 @@ fn main() -> io::Result<()> {
     };
 
     if let Ok(_) = visit_dirs(&parent, &mut callback) {
-        entries.sort_by_key(|e| e.mtime);
+        // Reverse sort so that highest (most recent) mtimes are first
+        entries.sort_by_key(|e| Reverse(e.mtime));
 
         for e in entries {
             println!("{:<10} @ {}", e.path, e.mtime);
