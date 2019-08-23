@@ -14,8 +14,7 @@ fn build_entry(direntry: &walkdir::DirEntry) -> io::Result<Entry> {
     let path = direntry.path();
     let metadata = direntry.metadata()?;
     if let Ok(duration) = metadata.modified()?.duration_since(SystemTime::UNIX_EPOCH) {
-        // I don't understand lifetimes so let's make the map own the `path` by cloning it
-        Ok(Entry { path: path.to_str().unwrap().to_string(), mtime: duration.as_secs() })
+        Ok(Entry { path: format!("{}", path.display()), mtime: duration.as_secs() })
     } else {
         Err(io::Error::new(ErrorKind::Other, "Could not convert duration"))
     }
