@@ -11,6 +11,10 @@ It ignores hidden ("dot") files and does not print directory names (but does
 descend into all directories). Unlike some Rust crates (ripgrep or fd), it
 intentionally does not check gitignore-type files.
 
+## Installation
+
+    cargo install --git https://github.com/gabebw/rust-lister
+
 ## Usage
 
 Show the most recent 10 files:
