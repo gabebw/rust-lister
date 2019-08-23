@@ -27,6 +27,10 @@ fn is_hidden(entry: &DirEntry) -> bool {
         .unwrap_or(false)
 }
 
+fn is_file(entry: &DirEntry) -> bool {
+    entry.file_type().is_file()
+}
+
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     let maximum_number_of_entries_to_print: usize = if args.len() < 2 {
@@ -39,12 +43,15 @@ fn main() -> io::Result<()> {
     let mut entries: Vec<Entry> = vec!();
 
     let walker = WalkDir::new(&current_dir).follow_links(true);
+    // Don't filter `is_file` in `filter_entry` because then it doesn't descend into directories
     for direntry in walker.into_iter().filter_entry(|e| !is_hidden(e)) {
         if let Ok(direntry) = direntry {
-            if let Ok(entry) = build_entry(&direntry) {
-                entries.push(entry);
-            } else {
-                eprintln!("Failed building entry");
+            if is_file(&direntry) {
+                if let Ok(entry) = build_entry(&direntry) {
+                    entries.push(entry);
+                } else {
+                    eprintln!("Failed building entry");
+                }
             }
         } else {
             eprintln!("Failed finding entry");
