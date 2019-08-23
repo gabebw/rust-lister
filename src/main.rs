@@ -27,6 +27,14 @@ struct Entry {
     mtime: u64,
 }
 
+fn build_entry(entry: &DirEntry) -> Entry {
+    let path = entry.path();
+    let metadata = fs::metadata(&path).unwrap();
+    let mtime = metadata.modified().unwrap().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
+    // I don't understand lifetimes so let's make the map own the `path` by cloning it
+    Entry { path: path.as_path().to_str().unwrap().to_string(), mtime: mtime }
+}
+
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
     if args.len() < 2 {
@@ -39,12 +47,7 @@ fn main() -> io::Result<()> {
     let mut entries: Vec<Entry> = vec!();
 
     let mut callback = |entry: &DirEntry| {
-        let path = entry.path();
-        let metadata = fs::metadata(&path).unwrap();
-        let mtime = metadata.modified().unwrap().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
-        // I don't understand lifetimes so let's make the map own the `path` by cloning it
-        let entry = Entry { path: path.as_path().to_str().unwrap().to_string(), mtime: mtime };
-        entries.push(entry);
+        entries.push(build_entry(entry));
     };
 
     if let Ok(_) = visit_dirs(&current_dir, &mut callback) {
