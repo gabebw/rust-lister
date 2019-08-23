@@ -3,7 +3,6 @@ use std::env;
 use std::fs::{self, DirEntry};
 use std::io::{self, ErrorKind};
 use std::path::{Path};
-use std::process;
 use std::time::{SystemTime};
 
 // walk a directory only visiting files
@@ -37,12 +36,12 @@ fn build_entry(entry: &DirEntry) -> Entry {
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    if args.len() < 2 {
-        eprintln!("Usage: {} [number]", args[0]);
-        process::exit(1);
-    }
+    let number_of_entries_to_print: usize = if args.len() < 2 {
+        10
+    } else {
+        args[1].parse().unwrap()
+    };
 
-    let number_of_entries_to_print: usize = args[1].parse().unwrap();
     let current_dir = env::current_dir()?;
     let mut entries: Vec<Entry> = vec!();
 
