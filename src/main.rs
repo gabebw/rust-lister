@@ -34,7 +34,7 @@ fn is_file(entry: &DirEntry) -> bool {
 fn build_entries(current_dir: &PathBuf) -> io::Result<Vec<Entry>> {
     let mut entries: Vec<Entry> = vec!();
 
-    let walker = WalkDir::new(&current_dir).follow_links(true);
+    let walker = WalkDir::new(&current_dir);
     // Don't filter `is_file` in `filter_entry` because then it doesn't descend into directories
     for direntry in walker.into_iter().filter_entry(|e| !is_hidden(e)) {
         let direntry = direntry?;
