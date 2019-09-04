@@ -7,13 +7,6 @@ use std::io;
 use std::path::{PathBuf};
 use std::time::{SystemTime};
 
-fn is_hidden(entry: &DirEntry) -> bool {
-    entry.file_name
-        .to_str()
-        .map(|s| s.starts_with("."))
-        .unwrap_or(false)
-}
-
 fn is_file(entry: &DirEntry) -> bool {
     entry.file_type.as_ref().map(|f| f.is_file()).unwrap_or(false)
 }
