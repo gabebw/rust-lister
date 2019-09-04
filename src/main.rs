@@ -37,10 +37,11 @@ fn build_entries(current_dir: &PathBuf) -> io::Result<Vec<Entry>> {
     let walker = WalkDir::new(&current_dir);
     // Don't filter `is_file` in `filter_entry` because then it doesn't descend into directories
     for direntry in walker.into_iter().filter_entry(|e| !is_hidden(e)) {
-        let direntry = direntry?;
-        if is_file(&direntry) {
-            let entry = build_entry(&direntry)?;
-            entries.push(entry);
+        if let Ok(direntry) = direntry {
+            if is_file(&direntry) {
+                let entry = build_entry(&direntry)?;
+                entries.push(entry);
+            }
         }
     }
     Ok(entries)
