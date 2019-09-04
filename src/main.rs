@@ -1,4 +1,4 @@
-use std::cmp::{self, Ordering};
+use std::cmp::{self, Reverse};
 use std::env;
 use std::error::Error;
 use std::io;
@@ -17,28 +17,28 @@ fn is_file(entry: &DirEntry) -> bool {
     entry.file_type().is_file()
 }
 
-fn compare_entries_result(a: &DirEntry, b: &DirEntry) -> Result<Ordering, Box<dyn Error>> {
-    let b_time = b.metadata()?.modified()?.duration_since(SystemTime::UNIX_EPOCH)?.as_secs();
-    let a_time = a.metadata()?.modified()?.duration_since(SystemTime::UNIX_EPOCH)?.as_secs();
-    // Reverse sort so that highest (most recent) mtimes are first
-    Ok(b_time.cmp(&a_time))
+fn mtime_result(e: &DirEntry) -> Result<u64, Box<dyn Error>> {
+    Ok(e.metadata()?.modified()?.duration_since(SystemTime::UNIX_EPOCH)?.as_secs())
 }
 
-fn compare_entries(a: &DirEntry, b: &DirEntry) -> Ordering {
-    compare_entries_result(a, b).unwrap_or(Ordering::Equal)
+fn mtime(e: &DirEntry, default: u64) -> u64 {
+    mtime_result(e).unwrap_or(default)
 }
 
 fn build_entries(current_dir: &PathBuf, n: usize) -> Vec<DirEntry> {
-    let walker = WalkDir::new(&current_dir).sort_by(|a, b| compare_entries(a, b));
-    walker.into_iter()
+    let walker = WalkDir::new(&current_dir);
+    let mut x: Vec<DirEntry> = walker.into_iter()
         // Don't descend into any hidden items.
         .filter_entry(|e| !is_hidden(e))
         // Skip items that we can't access
         .filter_map(Result::ok)
         // Skip directories
         .filter(is_file)
-        .take(n)
-        .collect()
+        .collect();
+
+    let now = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs();
+    x.sort_by_cached_key(|e| Reverse(mtime(e, now)));
+    x.into_iter().take(n).collect()
 }
 
 fn main() -> io::Result<()> {
