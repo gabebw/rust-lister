@@ -1,24 +1,30 @@
+use jwalk::{DirEntry, WalkDir};
 use std::cmp::{self, Reverse};
 use std::env;
 use std::error::Error;
+use std::fs::Metadata;
 use std::io;
 use std::path::{PathBuf};
 use std::time::{SystemTime};
-use walkdir::{DirEntry, WalkDir};
 
 fn is_hidden(entry: &DirEntry) -> bool {
-    entry.file_name()
+    entry.file_name
         .to_str()
         .map(|s| s.starts_with("."))
         .unwrap_or(false)
 }
 
 fn is_file(entry: &DirEntry) -> bool {
-    entry.file_type().is_file()
+    entry.file_type.as_ref().map(|f| f.is_file()).unwrap_or(false)
 }
 
 fn mtime_result(e: &DirEntry) -> Result<u64, Box<dyn Error>> {
-    Ok(e.metadata()?.modified()?.duration_since(SystemTime::UNIX_EPOCH)?.as_secs())
+    let metadata: Option<&Metadata> = e.metadata.as_ref().unwrap().as_ref().ok();
+    if let Some(metadata) = metadata {
+        Ok(metadata.modified()?.duration_since(SystemTime::UNIX_EPOCH)?.as_secs())
+    } else {
+        Err(Box::new(io::Error::new(io::ErrorKind::Other, "Couldn't get metadata")))
+    }
 }
 
 fn mtime(e: &DirEntry, default: u64) -> u64 {
@@ -26,10 +32,8 @@ fn mtime(e: &DirEntry, default: u64) -> u64 {
 }
 
 fn build_entries(current_dir: &PathBuf, n: usize) -> Vec<DirEntry> {
-    let walker = WalkDir::new(&current_dir);
+    let walker = WalkDir::new(&current_dir).skip_hidden(true).preload_metadata(true);
     let mut x: Vec<DirEntry> = walker.into_iter()
-        // Don't descend into any hidden items.
-        .filter_entry(|e| !is_hidden(e))
         // Skip items that we can't access
         .filter_map(Result::ok)
         // Skip directories
