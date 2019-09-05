@@ -1,4 +1,5 @@
 use jwalk::{DirEntry, WalkDir};
+use num_cpus;
 use std::cmp::{self, Reverse};
 use std::env;
 use std::error::Error;
@@ -25,7 +26,9 @@ fn mtime(e: &DirEntry, default: u64) -> u64 {
 }
 
 fn build_entries(current_dir: &PathBuf, n: usize) -> Vec<DirEntry> {
-    let walker = WalkDir::new(&current_dir).skip_hidden(true).preload_metadata(true);
+    // Use a maximum of 4 threads. Never use more than half of the available CPU cores.
+    let num_threads = cmp::min(4, num_cpus::get()/2);
+    let walker = WalkDir::new(&current_dir).skip_hidden(true).preload_metadata(true).num_threads(num_threads);
     let mut x: Vec<DirEntry> = walker.into_iter()
         // Skip items that we can't access
         .filter_map(Result::ok)
