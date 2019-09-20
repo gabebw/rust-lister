@@ -6,6 +6,7 @@ use std::error::Error;
 use std::fs::Metadata;
 use std::io;
 use std::path::{PathBuf};
+use std::process::exit;
 use std::time::{SystemTime};
 
 fn is_file(entry: &DirEntry) -> bool {
@@ -41,14 +42,23 @@ fn build_entries(current_dir: &PathBuf, n: usize) -> Vec<DirEntry> {
     x.into_iter().take(n).collect()
 }
 
-fn main() -> io::Result<()> {
-    let args: Vec<String> = env::args().collect();
-    let maximum_number_of_entries_to_print: usize = if args.len() < 2 {
+fn maximum_number_of_entries_to_print(args: Vec<String>) -> usize {
+    if args.len() < 2 {
         10
     } else {
-        args[1].parse().unwrap()
-    };
+        match args[1].parse() {
+            Err(_) => {
+                eprintln!("Please pass a number as the first argument.");
+                exit(1);
+            }
+            Ok(n) => n
+        }
+    }
+}
 
+fn main() -> io::Result<()> {
+    let args: Vec<String> = env::args().collect();
+    let maximum_number_of_entries_to_print = maximum_number_of_entries_to_print(args);
     let current_dir = env::current_dir()?;
     let entries = build_entries(&current_dir, maximum_number_of_entries_to_print);
 
