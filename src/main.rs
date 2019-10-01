@@ -42,27 +42,35 @@ fn build_entries(current_dir: &PathBuf, n: usize) -> Vec<DirEntry> {
     x.into_iter().take(n).collect()
 }
 
-fn maximum_number_of_entries_to_print(args: Vec<String>) -> usize {
-    if args.len() < 2 {
-        10
-    } else {
-        match args[1].parse() {
-            Err(_) => {
-                eprintln!("Please pass a number as the first argument.");
-                exit(1);
+fn maximum_number_of_entries_to_print(args: Option<&String>) -> usize {
+    match args {
+        None => 10,
+        Some(s) => {
+            match s.parse() {
+                Err(_) => {
+                    eprintln!("Please pass a number as the first argument.");
+                    exit(1);
+                }
+                Ok(n) => n
             }
-            Ok(n) => n
         }
+    }
+}
+
+fn dir_to_look_at(dir: Option<&String>) -> PathBuf {
+    match dir {
+        Some(dir) => PathBuf::from(dir),
+        None => env::current_dir().unwrap()
     }
 }
 
 fn main() -> io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    let maximum_number_of_entries_to_print = maximum_number_of_entries_to_print(args);
-    let current_dir = env::current_dir()?;
-    let entries = build_entries(&current_dir, maximum_number_of_entries_to_print);
+    let maximum_number_of_entries_to_print = maximum_number_of_entries_to_print(args.get(1));
+    let dir = dir_to_look_at(args.get(2));
+    let entries = build_entries(&dir, maximum_number_of_entries_to_print);
 
-    let leading_path = current_dir.to_str().unwrap();
+    let leading_path = dir.to_str().unwrap();
     let number_of_entries_to_print = cmp::min(maximum_number_of_entries_to_print, entries.len());
 
     for e in &entries[..number_of_entries_to_print] {

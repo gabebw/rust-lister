@@ -25,6 +25,10 @@ Show the most recent NUM files:
 
     lister NUM
 
+Show the most recent NUM files in a given directory:
+
+    lister NUM DIRECTORY_PATH
+
 Sample output in the rust-lister directory:
 
     README.md
