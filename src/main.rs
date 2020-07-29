@@ -86,10 +86,6 @@ fn maximum_number_of_entries_to_print(args: Option<&str>) -> usize {
     }
 }
 
-fn dir_to_look_at(dir: &str) -> PathBuf {
-    PathBuf::from(dir)
-}
-
 fn main() -> io::Result<()> {
     let matches = App::new("Lister")
         .version("0.2")
@@ -124,7 +120,7 @@ fn main() -> io::Result<()> {
     };
 
     let max_num_entries = maximum_number_of_entries_to_print(matches.value_of("NUMBER_OF_RESULTS"));
-    let dir = dir_to_look_at(matches.value_of("DIRECTORY").unwrap_or("."));
+    let dir = PathBuf::from(matches.value_of("DIRECTORY").unwrap_or("."));
     let entries = build_entries(&dir, max_num_entries, sort_by);
     let leading_path = dir.to_str().unwrap();
     let number_of_entries_to_print = min(max_num_entries, entries.len());
