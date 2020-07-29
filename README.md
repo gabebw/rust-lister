@@ -1,7 +1,7 @@
 # Lister
 
-Recursively shows the most-recently-modified files in the current directory. It
-is roughly equivalent to:
+Recursively shows the most-recently-modified or -created files in the current
+directory. It is roughly equivalent to:
 
     ls -t **/* | head -n NUM
 
@@ -17,17 +17,17 @@ intentionally does not check gitignore-type files.
 
 ## Usage
 
-Show the most recent 10 files:
+Show the most recent 10 files, sorted by modification date:
 
     lister
 
-Show the most recent NUM files:
+Show the most recent NUM files, sorted by creation date:
 
-    lister NUM
+    lister -n NUM -s created
 
 Show the most recent NUM files in a given directory:
 
-    lister NUM DIRECTORY_PATH
+    lister -n NUM DIRECTORY_PATH
 
 Sample output in the rust-lister directory:
 
